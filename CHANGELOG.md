@@ -1,0 +1,29 @@
+# Changelog
+
+All notable changes to Serial Mouse Tester will be documented in this file.
+
+Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
+- Patch number increments for feature additions
+- Letter increments for bug fixes and minor improvements
+- Minor version increments for significant milestones
+
+## [v00.00.1a] - 2026-03-10
+
+### Added
+- 🎯 **Protocol auto-detection** for Microsoft, Logitech, and Mouse Systems serial mice
+- 📊 **Hex Monitor** with real-time raw data display and color-coded packets
+- 🖱 **Mouse Trajectory Visualizer** with live movement trail and button indicators
+- ⚙ **Serial Port Configuration** dialog (COM port, baud rate, data bits, parity, stop bits)
+- 💾 **Data Recording & CSV Export** with timestamp, deltas, cumulative position
+- 🎨 **Modern Dark Theme** (Catppuccin Mocha inspired)
+- 📡 **Status Bar** with connection state, protocol, packet count, byte count, elapsed time
+- 🧪 **Protocol Parser Tests** for Microsoft and Mouse Systems
+- 📁 **Project Structure** with core/ui separation
+- 📖 **Help** menu with About dialog and Protocol Reference
+- ⌨ **Keyboard Shortcuts** (Ctrl+Shift+C/D for connect/disconnect, Ctrl+E for export)
+
+### Technical Details
+- Python 3.9+ / PySide6 (Qt6) / pyserial
+- Threaded serial reading with Qt signals
+- Protocol parsers: Microsoft (3-byte), Logitech (3/4-byte), Mouse Systems (5-byte)
+- Auto-detection uses byte-pattern scoring (bit 7/6 analysis)
