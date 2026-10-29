@@ -7,6 +7,20 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.3a] - 2026-03-10
+
+### Added (Mode switching scripts)
+- 🔧 **enable_tester_mode.bat** - Disable Windows Serial Mouse driver to free COM4
+- 🔧 **restore_windows_mode.bat** - Re-enable Windows driver for normal use
+- 🔧 **toggle_mode.bat** - Interactive mode switcher with state detection
+- 📖 **scripts/README.md** - Documentation for mode switching
+- 🔍 **Root cause identified**: Windows `SERENUM\MOUSE` driver claims COM4 exclusively
+
+### Diagnosis
+- Windows auto-detects serial mice via Microsoft Serial Mouse protocol
+- Built-in driver (`Microsoft Serial Mouse`) holds COM4 exclusively
+- `PermissionError(13)` when app tries to open COM4 = driver conflict
+
 ## [v00.00.2b] - 2026-03-10
 
 ### Added (RS-232 Expert patterns)
