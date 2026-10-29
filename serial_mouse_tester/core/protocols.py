@@ -260,17 +260,26 @@ class ProtocolAutoDetector:
         if len(self._buffer) < self.MIN_BYTES_FOR_DETECTION:
             return None
 
-        # Try Mouse Systems first (more specific pattern)
+        # Score all three protocols
         ms_score = self._score_mouse_systems()
         msft_score = self._score_microsoft()
+        logi_score = self._score_logitech()
 
-        if ms_score > 0.7:
-            self._detected_protocol = ProtocolType.MOUSE_SYSTEMS
-            self._confidence = ms_score
-        elif msft_score > 0.7:
-            # Default to Microsoft; will switch to Logitech if 4th byte pattern appears
+        # Pick the highest score above threshold (0.7)
+        best_score = max(ms_score, msft_score, logi_score)
+
+        if best_score < 0.7:
+            return None
+
+        if logi_score >= msft_score and logi_score >= ms_score and logi_score > 0.7:
+            self._detected_protocol = ProtocolType.LOGITECH
+            self._confidence = logi_score
+        elif msft_score >= ms_score and msft_score > 0.7:
             self._detected_protocol = ProtocolType.MICROSOFT
             self._confidence = msft_score
+        elif ms_score > 0.7:
+            self._detected_protocol = ProtocolType.MOUSE_SYSTEMS
+            self._confidence = ms_score
 
         return self._detected_protocol if self._detected_protocol != ProtocolType.UNKNOWN else None
 
@@ -294,6 +303,22 @@ class ProtocolAutoDetector:
         score = 0
         total = 0
         for i in range(0, min(len(self._buffer), 27), 3):
+            if i < len(self._buffer):
+                total += 1
+                if (self._buffer[i] & 0xC0) == 0x40:
+                    score += 1
+        return score / max(total, 1)
+
+    def _score_logitech(self) -> float:
+        """
+        Score how well the buffer matches Logitech pattern (4-byte, bits7-6=01 every 4 bytes).
+        Logitech = Microsoft 3-byte + 1 middle-button byte = 4-byte packets.
+        """
+        if len(self._buffer) < 16:
+            return 0.0
+        score = 0
+        total = 0
+        for i in range(0, min(len(self._buffer), 32), 4):
             if i < len(self._buffer):
                 total += 1
                 if (self._buffer[i] & 0xC0) == 0x40:

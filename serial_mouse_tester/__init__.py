@@ -1,4 +1,4 @@
 """Serial Mouse Tester - A modern serial mouse testing and analysis tool."""
 
-__version__ = "v00.00.3a"
+__version__ = "v00.00.3b"
 __author__ = "Bear Brother & Hui Bao"

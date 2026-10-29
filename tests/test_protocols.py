@@ -217,6 +217,19 @@ class TestMousePacketParser:
 class TestProtocolAutoDetector:
     """Test protocol auto-detection."""
 
+    def test_detect_logitech_4byte(self):
+        """Test detection of Logitech 4-byte protocol (real-world data)."""
+        detector = ProtocolAutoDetector()
+        # Real data from serial mouse capture (4-byte Logitech packets)
+        data = bytes([
+            0x50, 0x00, 0x01, 0x00,
+            0x43, 0x3C, 0x00, 0x00,
+            0x4F, 0x37, 0x3F, 0x00,
+            0x4F, 0x35, 0x3D, 0x00,
+        ])
+        result = detector.feed(data)
+        assert result == ProtocolType.LOGITECH, f'Expected LOGITECH, got {result}'
+
     def test_detect_microsoft(self):
         """Test detection of Microsoft protocol pattern."""
         detector = ProtocolAutoDetector()

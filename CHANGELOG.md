@@ -7,6 +7,14 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.3b] - 2026-03-10
+
+### Fixed
+- 🐛 **Logitech 4-byte auto-detection** - detector only checked 3-byte (Microsoft) alignment; real Logitech mouse sends 4-byte packets, causing detection failure
+- Added `_score_logitech()` with 4-byte alignment scoring
+- Auto-detector now scores all 3 protocols and picks the best match
+- Verified with real-world captured data from user's serial mouse
+
 ## [v00.00.3a] - 2026-03-10
 
 ### Added (Mode switching scripts)

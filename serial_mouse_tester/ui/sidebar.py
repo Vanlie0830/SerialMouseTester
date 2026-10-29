@@ -100,7 +100,7 @@ class Sidebar(QWidget):
         title.setStyleSheet(f"color: {Palette.TEXT}; padding: 8px;")
         title.setWordWrap(True)
 
-        subtitle = QLabel("v00.00.3a")
+        subtitle = QLabel("v00.00.3b")
         subtitle.setFont(QFont(Fonts.UI, 9))
         subtitle.setStyleSheet(f"color: {Palette.OVERLAY0}; padding: 0 8px 8px 8px;")
 
