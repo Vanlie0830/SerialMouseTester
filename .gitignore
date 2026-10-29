@@ -18,3 +18,10 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+dist/
+build/
+*.exe
+dist/
+build/
+*.spec.bak
+*.exe

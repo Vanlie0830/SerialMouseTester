@@ -7,6 +7,13 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.1b] - 2026-03-10
+
+### Added
+- 📦 **Windows EXE packaging** via PyInstaller (single-file, no console, 45.3 MB)
+- 🔧 **PyInstaller spec file** for reproducible builds
+- 🗜 UPX compression enabled
+
 ## [v00.00.1a] - 2026-03-10
 
 ### Added
