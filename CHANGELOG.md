@@ -7,6 +7,21 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.2a] - 2026-03-10
+
+### Added (VVT-style refactoring)
+- 🎨 **Centralized theme module** (`theme.py`) - Catppuccin Mocha palette as single source of truth
+- 📱 **Sidebar navigation** with panel switching (Hex / Mouse / Log / Settings)
+- 📊 **Card-based status display** in sidebar (Connection / Protocol / Packets)
+- 🔌 **SignalRegistry** - centralized event dispatch (no lambda sea)
+- ⚙ **Settings panel** with inline quick actions
+- 🛡 **Evidence-based error handling** - errors show actual evidence, not guesses
+
+### Changed
+- 🏗 UI refactored: QSplitter layout → Sidebar + QStackedWidget panels
+- 🎨 All QSS styles centralized in theme.py (change theme in ONE place)
+- 📡 Serial events routed through SignalRegistry
+
 ## [v00.00.1c] - 2026-03-10
 
 ### Fixed
