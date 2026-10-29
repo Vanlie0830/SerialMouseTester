@@ -5,6 +5,7 @@ Runs in a separate QThread, continuously reading from the serial port
 and emitting signals to the UI thread.
 """
 
+import sys
 import time
 from typing import Optional
 
@@ -132,13 +133,22 @@ class SerialWorker(QThread):
             self.connection_changed.emit(False)
 
     def _close_port(self):
-        """Safely close the serial port."""
+        """
+        Safely close the serial port.
+
+        RS-232 Expert rules:
+        - NEVER call flush() (Windows FlushFileBuffers has no timeout = permanent hang)
+        - Unconditionally kill state first, then close handle
+        """
+        # Kill state first (no zombie references)
+        self._running = False
         if self._serial and self._serial.is_open:
             try:
+                # NO flush() - WriteFile success means driver owns it (RS-232 rule)
                 self._serial.close()
                 self.port_info.emit(f"Disconnected from {self._port_name}")
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[SerialWorker] close error (non-fatal): {e}", file=sys.stderr)
         self._serial = None
 
     def stop(self):

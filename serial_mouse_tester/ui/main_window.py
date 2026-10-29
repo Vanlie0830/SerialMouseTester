@@ -63,6 +63,8 @@ class MainWindow(QMainWindow):
         self._packet_count = 0
         self._total_bytes = 0
         self._connection_start = 0.0
+        self._last_parse_ms = 0.0
+        self._last_recv_bytes = 0
 
         self._build_ui()
         self._build_menu()
@@ -210,6 +212,10 @@ class MainWindow(QMainWindow):
         self._statusbar.addWidget(self._lbl_protocol)
         self._lbl_packets = QLabel("Packets: 0")
         self._statusbar.addWidget(self._lbl_packets)
+        self._lbl_perf = QLabel("parse: —")
+        self._lbl_perf.setStyleSheet(f"color: {Palette.OVERLAY0}; font-size: 10px; padding: 0 8px;")
+        self._statusbar.addWidget(self._lbl_perf)
+
         self._lbl_version = QLabel(f"  {__version__}  ")
         self._lbl_version.setStyleSheet(f"color: {Palette.OVERLAY0};")
         self._statusbar.addPermanentWidget(self._lbl_version)
@@ -266,14 +272,23 @@ class MainWindow(QMainWindow):
         self._serial_worker.start()
 
     def _disconnect(self):
+        # RS-232 pattern: unconditionally kill old state first (no zombie timers)
+        self._stats_timer.stop()
         if self._serial_worker:
             self._serial_worker.stop()
             self._serial_worker = None
+        self._stats_timer.start(500)  # Restart stats timer for idle state
 
     def _on_data_received(self, data):
+        t0 = time.perf_counter()
         self._total_bytes += len(data)
         self._hex_panel.append_raw_data(data)
+        t_parse_start = time.perf_counter()
         states = self._parser.feed(data)
+        t_parse_end = time.perf_counter()
+        # RS-232: phase timing instrumentation
+        self._last_parse_ms = (t_parse_end - t_parse_start) * 1000
+        self._last_recv_bytes = len(data)
         for state in states:
             self._packet_count += 1
             self._mouse_panel.update_mouse(state.dx, state.dy, state.left_button, state.right_button, state.middle_button)
@@ -329,6 +344,10 @@ class MainWindow(QMainWindow):
     def _update_statusbar(self):
         self._lbl_packets.setText(f"Packets: {self._packet_count:,}")
         self._sidebar.update_packets(self._packet_count, self._total_bytes)
+        # RS-232: phase timing instrumentation
+        parse_ms = getattr(self, '_last_parse_ms', 0)
+        recv_b = getattr(self, '_last_recv_bytes', 0)
+        self._lbl_perf.setText(f"parse: {parse_ms:.1f}ms | rx: {recv_b}B")
 
     def _show_about(self):
         QMessageBox.about(self, "About Serial Mouse Tester",

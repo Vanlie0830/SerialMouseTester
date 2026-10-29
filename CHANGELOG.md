@@ -7,6 +7,15 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.2b] - 2026-03-10
+
+### Added (RS-232 Expert patterns)
+- 📡 **Display merging**: 30ms quiet-period grouping (serial streams have no message boundaries)
+- 🛡 **Timer/flag safety**: unconditionally kill old timers on disconnect (no zombie state)
+- 📊 **Phase timing instrumentation**: parse latency + RX byte count shown in status bar
+- 🚫 **No-flush policy**: documented and enforced (WriteFile success = driver owns it)
+- 🔍 **Evidence-based error logging**: non-fatal close errors logged with actual message
+
 ## [v00.00.2a] - 2026-03-10
 
 ### Added (VVT-style refactoring)

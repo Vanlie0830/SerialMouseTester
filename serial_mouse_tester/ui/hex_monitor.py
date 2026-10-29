@@ -8,7 +8,7 @@ import time
 from collections import deque
 from datetime import datetime
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QFont, QColor, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 MAX_LINES = 2000  # Maximum lines to keep in the display
+QUIET_MS = 30     # RS-232 pattern: merge bytes until 30ms silence (no message boundaries in serial)
 
 
 class HexMonitor(QPlainTextEdit):
@@ -46,31 +47,45 @@ class HexMonitor(QPlainTextEdit):
         self._packet_count = 0
         self._byte_count = 0
 
+        # RS-232 pattern: display merging buffer
+        self._merge_buffer = bytearray()
+        self._merge_timer = QTimer(self)
+        self._merge_timer.setSingleShot(True)
+        self._merge_timer.timeout.connect(self._flush_merge_buffer)
+
     def append_raw_data(self, data: bytes, protocol_hint: str = ""):
-        """Append raw bytes as a formatted hex dump line."""
+        """Buffer bytes; display after 30ms quiet (RS-232 display merging)."""
+        self._merge_buffer.extend(data)
+        self._byte_count += len(data)
+        self._merge_timer.start(QUIET_MS)  # Restart timer on every new byte
+
+    def _flush_merge_buffer(self):
+        """Display merged bytes as one line after quiet period."""
+        if not self._merge_buffer:
+            return
+        data = bytes(self._merge_buffer)
+        self._merge_buffer.clear()
+        self._packet_count += 1
+
         timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
         hex_str = " ".join(f"{b:02X}" for b in data)
         ascii_str = "".join(chr(b) if 32 <= b < 127 else "." for b in data)
 
-        self._byte_count += len(data)
-        self._packet_count += 1
-
-        # Format: [timestamp] HEX... | ASCII
         line = f"[{timestamp}] {hex_str:<60s} | {ascii_str}"
 
         cursor = self.textCursor()
         cursor.movePosition(QTextCursor.End)
 
-        # Color coding based on data length
+        # Color by merged length
         fmt = QTextCharFormat()
-        if len(data) == 3:
-            fmt.setForeground(QColor("#a6e3a1"))  # Green for Microsoft 3-byte
-        elif len(data) == 4:
-            fmt.setForeground(QColor("#89b4fa"))  # Blue for Logitech 4-byte
-        elif len(data) == 5:
-            fmt.setForeground(QColor("#f9e2af"))  # Yellow for Mouse Systems 5-byte
+        if len(data) <= 4:
+            fmt.setForeground(QColor("#a6e3a1"))
+        elif len(data) <= 8:
+            fmt.setForeground(QColor("#89b4fa"))
+        elif len(data) <= 16:
+            fmt.setForeground(QColor("#f9e2af"))
         else:
-            fmt.setForeground(QColor("#6c7086"))  # Gray for other
+            fmt.setForeground(QColor("#6c7086"))
 
         cursor.insertText(line + "\n", fmt)
         self.setTextCursor(cursor)
@@ -89,7 +104,9 @@ class HexMonitor(QPlainTextEdit):
         self.ensureCursorVisible()
 
     def clear_display(self):
-        """Clear all displayed data."""
+        """Clear all displayed data and merge buffer."""
+        self._merge_timer.stop()  # RS-232: kill timer first (unconditionally)
+        self._merge_buffer.clear()
         self.clear()
         self._packet_count = 0
         self._byte_count = 0
