@@ -7,6 +7,13 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.3c] - 2026-03-10
+
+### Fixed
+- 🐛 **Auto-detection failed with leading garbage** - detector only checked fixed offsets from buffer start; any noise bytes misaligned the scan. Now tries ALL possible offsets (0..packet_size-1) and takes the best score.
+- 🐛 **Disconnect button froze UI** - `SerialWorker.stop()` called `wait(3000)` blocking the main thread. Now non-blocking: signals thread to stop, cleans up on `connection_changed(False)`.
+- 🔒 Worker reference cleanup via `deleteLater()` on disconnect confirmation
+
 ## [v00.00.3b] - 2026-03-10
 
 ### Fixed

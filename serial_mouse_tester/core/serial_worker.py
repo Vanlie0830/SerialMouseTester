@@ -152,9 +152,16 @@ class SerialWorker(QThread):
         self._serial = None
 
     def stop(self):
-        """Signal the thread to stop and wait for it to finish."""
+        """
+        Signal the thread to stop (NON-BLOCKING).
+        
+        Previously used wait(3000) which blocked the UI thread for up to 3 seconds,
+        making the app appear frozen and the Disconnect button unresponsive.
+        Now just signals the thread; connection_changed(False) fires when it exits.
+        """
         self._running = False
-        self.wait(3000)  # Wait up to 3 seconds for thread to finish
+        # Don't wait() - the thread will exit within ~10ms (the read timeout)
+        # and emit connection_changed(False) from its finally block
 
     def get_statistics(self) -> dict:
         """Return connection statistics."""

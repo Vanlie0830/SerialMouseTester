@@ -272,12 +272,12 @@ class MainWindow(QMainWindow):
         self._serial_worker.start()
 
     def _disconnect(self):
-        # RS-232 pattern: unconditionally kill old state first (no zombie timers)
-        self._stats_timer.stop()
+        # Non-blocking disconnect: signal thread to stop, don't wait
         if self._serial_worker:
             self._serial_worker.stop()
-            self._serial_worker = None
-        self._stats_timer.start(500)  # Restart stats timer for idle state
+            # Don't set to None yet - let connection_changed(False) handle cleanup
+            self._btn_disconnect.setEnabled(False)  # Prevent double-click
+            self._btn_connect.setEnabled(False)     # Disable until disconnect completes
 
     def _on_data_received(self, data):
         t0 = time.perf_counter()
@@ -318,6 +318,10 @@ class MainWindow(QMainWindow):
             self._cmb_baud.setEnabled(True)
             self._cmb_proto.setEnabled(True)
             self._sidebar.update_connection(False)
+            # Clean up worker reference after thread confirms it stopped
+            if self._serial_worker:
+                self._serial_worker.deleteLater()
+                self._serial_worker = None
 
     def _on_serial_error(self, msg):
         self._statusbar.showMessage(f"\u274c {msg}", 8000)

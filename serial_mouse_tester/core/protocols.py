@@ -283,47 +283,43 @@ class ProtocolAutoDetector:
 
         return self._detected_protocol if self._detected_protocol != ProtocolType.UNKNOWN else None
 
-    def _score_mouse_systems(self) -> float:
-        """Score how well the buffer matches Mouse Systems pattern (5-byte, bit7=1)."""
-        if len(self._buffer) < 15:
+    @staticmethod
+    def _score_pattern(buffer: bytearray, packet_size: int,
+                       mask: int, expected: int, max_scan: int = 48) -> float:
+        """
+        Score byte-pattern alignment across ALL possible offsets.
+        This fixes the bug where leading garbage bytes misaligned detection.
+
+        For each offset 0..packet_size-1, count how many bytes at positions
+        offset, offset+packet_size, offset+2*packet_size... match (byte & mask) == expected.
+        Return the BEST score across all offsets.
+        """
+        if len(buffer) < packet_size * 3:
             return 0.0
-        score = 0
-        total = 0
-        for i in range(0, min(len(self._buffer), 25), 5):
-            if i < len(self._buffer):
+        limit = min(len(buffer), max_scan)
+        best = 0.0
+        for offset in range(packet_size):
+            score = 0
+            total = 0
+            for i in range(offset, limit, packet_size):
                 total += 1
-                if self._buffer[i] & 0x80:
+                if (buffer[i] & mask) == expected:
                     score += 1
-        return score / max(total, 1)
+            if total > 0:
+                best = max(best, score / total)
+        return best
+
+    def _score_mouse_systems(self) -> float:
+        """Score Mouse Systems pattern: 5-byte, bit7=1 at packet start."""
+        return self._score_pattern(self._buffer, 5, 0x80, 0x80)
 
     def _score_microsoft(self) -> float:
-        """Score how well the buffer matches Microsoft pattern (3-byte, bits7-6=01)."""
-        if len(self._buffer) < 15:
-            return 0.0
-        score = 0
-        total = 0
-        for i in range(0, min(len(self._buffer), 27), 3):
-            if i < len(self._buffer):
-                total += 1
-                if (self._buffer[i] & 0xC0) == 0x40:
-                    score += 1
-        return score / max(total, 1)
+        """Score Microsoft pattern: 3-byte, bits7:6=01 at packet start."""
+        return self._score_pattern(self._buffer, 3, 0xC0, 0x40)
 
     def _score_logitech(self) -> float:
-        """
-        Score how well the buffer matches Logitech pattern (4-byte, bits7-6=01 every 4 bytes).
-        Logitech = Microsoft 3-byte + 1 middle-button byte = 4-byte packets.
-        """
-        if len(self._buffer) < 16:
-            return 0.0
-        score = 0
-        total = 0
-        for i in range(0, min(len(self._buffer), 32), 4):
-            if i < len(self._buffer):
-                total += 1
-                if (self._buffer[i] & 0xC0) == 0x40:
-                    score += 1
-        return score / max(total, 1)
+        """Score Logitech pattern: 4-byte, bits7:6=01 at packet start."""
+        return self._score_pattern(self._buffer, 4, 0xC0, 0x40)
 
     def reset(self):
         """Reset detection state."""
