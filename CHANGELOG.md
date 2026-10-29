@@ -7,6 +7,13 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.1c] - 2026-03-10
+
+### Fixed
+- 🐛 **Window maximize crash** - `QColor(str, int)` invalid constructor in MouseCanvas glow effect
+- 🛡 **Global exception handler** - unhandled errors show dialog instead of crashing
+- 🛡 **paintEvent protection** - painting errors are caught and logged, never crash
+
 ## [v00.00.1b] - 2026-03-10
 
 ### Added

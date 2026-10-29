@@ -11,6 +11,7 @@ The primary application window that integrates all panels:
 
 import sys
 import time
+import traceback
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QAction, QFont, QIcon, QKeySequence
@@ -580,6 +581,23 @@ class MainWindow(QMainWindow):
 
 def main():
     """Application entry point."""
+    # Global exception handler - prevent crashes
+    def exception_hook(exc_type, exc_value, exc_tb):
+        error_msg = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+        print(f"[FATAL] Unhandled exception:\n{error_msg}", file=sys.stderr)
+        # Show error dialog instead of crashing
+        try:
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(
+                None, "Unexpected Error",
+                f"An unexpected error occurred:\n\n{exc_value}\n\n"
+                f"The application will continue running."
+            )
+        except Exception:
+            pass
+
+    sys.excepthook = exception_hook
+
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     app.setStyleSheet(DARK_THEME)

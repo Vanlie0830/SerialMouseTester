@@ -63,6 +63,14 @@ class MouseCanvas(QWidget):
         self.update()
 
     def paintEvent(self, event):
+        try:
+            self._do_paint(event)
+        except Exception as e:
+            # Prevent paint errors from crashing the app
+            import sys
+            print(f"[MouseCanvas] paintEvent error: {e}", file=sys.stderr)
+
+    def _do_paint(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
@@ -110,10 +118,10 @@ class MouseCanvas(QWidget):
         glow = QRadialGradient(dot_x, dot_y, 15)
         if self._left_btn or self._right_btn or self._middle_btn:
             glow.setColorAt(0, QColor("#f38ba8"))
-            glow.setColorAt(1, QColor("#f38ba8", 0))
+            glow.setColorAt(1, QColor(0xf3, 0x8b, 0xa8, 0))
         else:
             glow.setColorAt(0, QColor("#a6e3a1"))
-            glow.setColorAt(1, QColor("#a6e3a1", 0))
+            glow.setColorAt(1, QColor(0xa6, 0xe3, 0xa1, 0))
         painter.setBrush(QBrush(glow))
         painter.setPen(Qt.NoPen)
         painter.drawEllipse(QPointF(dot_x, dot_y), 15, 15)
