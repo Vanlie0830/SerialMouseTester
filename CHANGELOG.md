@@ -7,6 +7,12 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.3d] - 2026-11-04
+
+### Fixed
+- 🔍 **Auto-detection sensitivity**: scan range 48→512 bytes, threshold 0.7→0.5
+- 📊 **Diagnostic scores** in status bar (MSys/MSft/Logi) for real-time debugging
+
 ## [v00.00.3c] - 2026-03-10
 
 ### Fixed

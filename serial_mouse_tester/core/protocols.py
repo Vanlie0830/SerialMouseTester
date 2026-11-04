@@ -238,6 +238,7 @@ class ProtocolAutoDetector:
         self._buffer = bytearray()
         self._detected_protocol: ProtocolType = ProtocolType.UNKNOWN
         self._confidence = 0.0
+        self._last_scores: dict = {"MSys": 0.0, "MSft": 0.0, "Logi": 0.0}
 
     @property
     def detected_protocol(self) -> ProtocolType:
@@ -246,6 +247,10 @@ class ProtocolAutoDetector:
     @property
     def confidence(self) -> float:
         return self._confidence
+
+    @property
+    def last_scores(self) -> dict:
+        return self._last_scores
 
     def feed(self, data: bytes) -> Optional[ProtocolType]:
         """
@@ -265,34 +270,34 @@ class ProtocolAutoDetector:
         msft_score = self._score_microsoft()
         logi_score = self._score_logitech()
 
-        # Pick the highest score above threshold (0.7)
+        self._last_scores = {
+            "MSys": ms_score, "MSft": msft_score, "Logi": logi_score
+        }
+
+        # Pick the highest score above threshold (0.5 for better sensitivity)
         best_score = max(ms_score, msft_score, logi_score)
 
-        if best_score < 0.7:
+        if best_score < 0.5:
             return None
 
-        if logi_score >= msft_score and logi_score >= ms_score and logi_score > 0.7:
+        if logi_score >= msft_score and logi_score >= ms_score:
             self._detected_protocol = ProtocolType.LOGITECH
             self._confidence = logi_score
-        elif msft_score >= ms_score and msft_score > 0.7:
+        elif msft_score >= ms_score:
             self._detected_protocol = ProtocolType.MICROSOFT
             self._confidence = msft_score
-        elif ms_score > 0.7:
+        else:
             self._detected_protocol = ProtocolType.MOUSE_SYSTEMS
             self._confidence = ms_score
 
-        return self._detected_protocol if self._detected_protocol != ProtocolType.UNKNOWN else None
+        return self._detected_protocol
 
     @staticmethod
     def _score_pattern(buffer: bytearray, packet_size: int,
-                       mask: int, expected: int, max_scan: int = 48) -> float:
+                       mask: int, expected: int, max_scan: int = 512) -> float:
         """
         Score byte-pattern alignment across ALL possible offsets.
-        This fixes the bug where leading garbage bytes misaligned detection.
-
-        For each offset 0..packet_size-1, count how many bytes at positions
-        offset, offset+packet_size, offset+2*packet_size... match (byte & mask) == expected.
-        Return the BEST score across all offsets.
+        Tries offsets 0..packet_size-1 and returns the BEST score.
         """
         if len(buffer) < packet_size * 3:
             return 0.0

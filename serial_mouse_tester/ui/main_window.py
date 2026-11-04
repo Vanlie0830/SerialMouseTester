@@ -216,6 +216,10 @@ class MainWindow(QMainWindow):
         self._lbl_perf.setStyleSheet(f"color: {Palette.OVERLAY0}; font-size: 10px; padding: 0 8px;")
         self._statusbar.addWidget(self._lbl_perf)
 
+        self._lbl_scores = QLabel("detect: —")
+        self._lbl_scores.setStyleSheet(f"color: {Palette.MAUVE}; font-size: 10px; padding: 0 8px;")
+        self._statusbar.addWidget(self._lbl_scores)
+
         self._lbl_version = QLabel(f"  {__version__}  ")
         self._lbl_version.setStyleSheet(f"color: {Palette.OVERLAY0};")
         self._statusbar.addPermanentWidget(self._lbl_version)
@@ -348,10 +352,14 @@ class MainWindow(QMainWindow):
     def _update_statusbar(self):
         self._lbl_packets.setText(f"Packets: {self._packet_count:,}")
         self._sidebar.update_packets(self._packet_count, self._total_bytes)
-        # RS-232: phase timing instrumentation
         parse_ms = getattr(self, '_last_parse_ms', 0)
         recv_b = getattr(self, '_last_recv_bytes', 0)
         self._lbl_perf.setText(f"parse: {parse_ms:.1f}ms | rx: {recv_b}B")
+        # Diagnostic: show auto-detect scores
+        scores = self._parser._auto_detector.last_scores
+        self._lbl_scores.setText(
+            f"detect: MSys={scores.get('MSys',0):.2f} MSft={scores.get('MSft',0):.2f} Logi={scores.get('Logi',0):.2f}"
+        )
 
     def _show_about(self):
         QMessageBox.about(self, "About Serial Mouse Tester",
