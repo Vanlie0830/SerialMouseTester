@@ -61,11 +61,14 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"\U0001f5b1 Serial Mouse Tester {__version__}")
         self.setMinimumSize(1100, 700)
 
-        # Set application icon
+        # Set application icon (use multi-size ICO for crisp rendering at all sizes)
         import os
-        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "icon_256.png")
-        if os.path.exists(icon_path):
-            self.setWindowIcon(QIcon(icon_path))
+        icon_ico = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "icon.ico")
+        icon_png = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "icon_256.png")
+        if os.path.exists(icon_ico):
+            self.setWindowIcon(QIcon(icon_ico))
+        elif os.path.exists(icon_png):
+            self.setWindowIcon(QIcon(icon_png))
 
         self._serial_worker = None
         self._parser = MousePacketParser()
@@ -484,11 +487,15 @@ def main():
     app.setStyleSheet(FULL_QSS)
     app.setFont(QFont(Fonts.UI, Fonts.UI_SIZE))
 
-    # Set application icon
+    # Set application icon (multi-size ICO)
     import os as _os
-    _icon_path = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))), "assets", "icon_256.png")
-    if _os.path.exists(_icon_path):
-        app.setWindowIcon(QIcon(_icon_path))
+    _base = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))), "assets")
+    _icon_ico = _os.path.join(_base, "icon.ico")
+    _icon_png = _os.path.join(_base, "icon_256.png")
+    if _os.path.exists(_icon_ico):
+        app.setWindowIcon(QIcon(_icon_ico))
+    elif _os.path.exists(_icon_png):
+        app.setWindowIcon(QIcon(_icon_png))
     window = MainWindow()
     window.show()
     return app.exec()
