@@ -7,6 +7,15 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.4b] - 2026-11-04
+
+### Added
+- 🎨 **Custom application icon** - stylized serial mouse + COM port (Catppuccin Mocha theme)
+- 📐 Multi-size ICO (16/24/32/48/64/128/256px) embedded in EXE
+
+### Fixed
+- 📱 **Sidebar card compression** - StatusCard minimum height 80px, text no longer overlaps when window is resized
+
 ## [v00.00.4a] - 2026-11-04
 
 ### Added (Mode switching in-app)

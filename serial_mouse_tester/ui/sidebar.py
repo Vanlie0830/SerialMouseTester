@@ -10,6 +10,7 @@ from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QFrame, QGridLayout, QSizePolicy,
+    QScrollArea, QSizePolicy,
 )
 
 from .theme import Palette, Fonts, SIDEBAR_QSS, CARD_QSS
@@ -31,10 +32,12 @@ class StatusCard(QFrame):
     def __init__(self, icon: str, title: str, parent=None):
         super().__init__(parent)
         self.setProperty("card", "true")
+        self.setMinimumHeight(80)  # Prevent compression when window is small
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 10, 12, 10)
         layout.setSpacing(2)
+        layout.addStretch(0)  # Prevent content from spreading
 
         # Title row (icon + label)
         title_row = QHBoxLayout()
@@ -49,6 +52,7 @@ class StatusCard(QFrame):
         # Value
         self._value_lbl = QLabel("—")
         self._value_lbl.setProperty("card-value", "true")
+        self._value_lbl.setMinimumHeight(30)  # Prevent squishing
 
         # Subtitle
         self._sub_lbl = QLabel("")
@@ -57,6 +61,7 @@ class StatusCard(QFrame):
         layout.addLayout(title_row)
         layout.addWidget(self._value_lbl)
         layout.addWidget(self._sub_lbl)
+        layout.addStretch(0)
 
     def set_value(self, value: str, color: str = None):
         self._value_lbl.setText(value)
@@ -100,7 +105,7 @@ class Sidebar(QWidget):
         title.setStyleSheet(f"color: {Palette.TEXT}; padding: 8px;")
         title.setWordWrap(True)
 
-        subtitle = QLabel("v00.00.4a")
+        subtitle = QLabel("v00.00.4b")
         subtitle.setFont(QFont(Fonts.UI, 9))
         subtitle.setStyleSheet(f"color: {Palette.OVERLAY0}; padding: 0 8px 8px 8px;")
 

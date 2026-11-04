@@ -13,7 +13,7 @@ import time
 import traceback
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QStackedWidget, QLabel, QPushButton, QComboBox, QStatusBar,
@@ -60,6 +60,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(f"\U0001f5b1 Serial Mouse Tester {__version__}")
         self.setMinimumSize(1100, 700)
+
+        # Set application icon
+        import os
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "assets", "icon_256.png")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
 
         self._serial_worker = None
         self._parser = MousePacketParser()
@@ -477,6 +483,12 @@ def main():
     app.setStyle("Fusion")
     app.setStyleSheet(FULL_QSS)
     app.setFont(QFont(Fonts.UI, Fonts.UI_SIZE))
+
+    # Set application icon
+    import os as _os
+    _icon_path = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))), "assets", "icon_256.png")
+    if _os.path.exists(_icon_path):
+        app.setWindowIcon(QIcon(_icon_path))
     window = MainWindow()
     window.show()
     return app.exec()

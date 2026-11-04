@@ -18,6 +18,8 @@ a = Analysis(
     binaries=[],
     datas=[
         (os.path.join(ROOT, 'VERSION'), '.'),
+        (os.path.join(ROOT, 'assets', 'icon_256.png'), 'assets'),
+        (os.path.join(ROOT, 'assets', 'icon.ico'), 'assets'),
     ],
     hiddenimports=[
         'serial_mouse_tester',
@@ -70,4 +72,5 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     version=None,
+    icon=r'E:\SerialMouseTester\assets\icon.ico' if os.path.exists(r'E:\SerialMouseTester\assets\icon.ico') else None,
 )
