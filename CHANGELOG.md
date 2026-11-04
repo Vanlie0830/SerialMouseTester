@@ -7,6 +7,16 @@ Format: `v{major:02d}.{minor:02d}.{patch:d}{letter}`
 - Letter increments for bug fixes and minor improvements
 - Minor version increments for significant milestones
 
+## [v00.00.4a] - 2026-11-04
+
+### Added (Mode switching in-app)
+- 🔧 **Mode Switching panel** in Settings (replaces manual batch scripts)
+- 🔌 **Enable Tester Mode** button (disable Windows Serial Mouse driver, UAC elevated)
+- 🖥 **Restore Windows Mode** button (re-enable driver, UAC elevated)
+- 📊 **Live driver status** display (ACTIVE / DISABLED / Error)
+- 🔒 UAC elevation via ShellExecuteW 'runas' verb
+- ❓ Confirmation dialog before triggering UAC
+
 ## [v00.00.3d] - 2026-11-04
 
 ### Fixed

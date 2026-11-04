@@ -25,6 +25,10 @@ from ..core.protocols import (
     MousePacketParser, ProtocolType, PROTOCOL_CONFIGS,
 )
 from ..core.serial_worker import SerialWorker, list_serial_ports
+from ..core.mode_switcher import (
+    is_admin, get_driver_status,
+    enable_tester_mode, restore_windows_mode,
+)
 from .theme import Palette, Fonts, FULL_QSS
 from .sidebar import Sidebar
 from .hex_monitor import HexMonitorPanel
@@ -99,7 +103,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self._stack, stretch=1)
         self._stack.setCurrentIndex(0)
 
-    def _build_settings_panel(self):
+    def _build_settings_panel(self) -> QWidget:
         widget = QWidget()
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -124,6 +128,44 @@ class MainWindow(QMainWindow):
         btn_clear.setFixedHeight(48)
         btn_clear.clicked.connect(self._clear_all)
 
+        # ── Mode Switching Section ──
+        mode_title = QLabel("\U0001f527 Mode Switching")
+        mode_title.setFont(QFont(Fonts.UI, Fonts.HEADING_SIZE, QFont.Bold))
+        mode_title.setStyleSheet(f"color: {Palette.TEXT}; margin-top: 12px;")
+
+        # Status display
+        self._lbl_driver_status = QLabel("Checking driver status...")
+        self._lbl_driver_status.setStyleSheet(
+            f"color: {Palette.SUBTEXT0}; font-size: 11px;"
+            f"background: {Palette.SURFACE0}; padding: 8px 12px;"
+            f"border-radius: 6px;"
+        )
+        self._lbl_driver_status.setWordWrap(True)
+
+        # Mode switching buttons
+        self._btn_tester_mode = QPushButton("  \U0001f9ea Enable Tester Mode")
+        self._btn_tester_mode.setProperty("variant", "primary")
+        self._btn_tester_mode.setFixedHeight(48)
+        self._btn_tester_mode.setToolTip(
+            "Disable Windows Serial Mouse driver to free COM port\n"
+            "for SerialMouseTester. Requires Administrator (UAC prompt)."
+        )
+        self._btn_tester_mode.clicked.connect(self._on_enable_tester_mode)
+
+        self._btn_windows_mode = QPushButton("  \U0001f5a5 Restore Windows Mode")
+        self._btn_windows_mode.setProperty("variant", "secondary")
+        self._btn_windows_mode.setFixedHeight(48)
+        self._btn_windows_mode.setToolTip(
+            "Re-enable Windows Serial Mouse driver for normal mouse use\n"
+            "Requires Administrator (UAC prompt)."
+        )
+        self._btn_windows_mode.clicked.connect(self._on_restore_windows_mode)
+
+        self._btn_refresh_status = QPushButton("  \U0001f504 Refresh Status")
+        self._btn_refresh_status.setProperty("variant", "secondary")
+        self._btn_refresh_status.setFixedHeight(40)
+        self._btn_refresh_status.clicked.connect(self._refresh_driver_status)
+
         info = QLabel(
             f"Serial Mouse Tester {__version__}\n"
             f"Python + PySide6 (Qt6) | Catppuccin Mocha\n"
@@ -138,8 +180,16 @@ class MainWindow(QMainWindow):
         layout.addWidget(btn_serial)
         layout.addWidget(btn_reset)
         layout.addWidget(btn_clear)
+        layout.addWidget(mode_title)
+        layout.addWidget(self._lbl_driver_status)
+        layout.addWidget(self._btn_tester_mode)
+        layout.addWidget(self._btn_windows_mode)
+        layout.addWidget(self._btn_refresh_status)
         layout.addStretch()
         layout.addWidget(info)
+
+        # Load initial driver status
+        QTimer.singleShot(500, self._refresh_driver_status)
         return widget
 
     def _build_menu(self):
@@ -334,6 +384,44 @@ class MainWindow(QMainWindow):
 
     def _on_port_info(self, msg):
         self._statusbar.showMessage(msg, 3000)
+
+    def _refresh_driver_status(self):
+        from ..core.mode_switcher import get_driver_status
+        status = get_driver_status()
+        if status == "OK":
+            self._lbl_driver_status.setText("Microsoft Serial Mouse: ACTIVE (mouse works in Windows)")
+            self._lbl_driver_status.setStyleSheet(f"color: {Palette.GREEN}; font-size: 11px; background: {Palette.SURFACE0}; padding: 8px 12px; border-radius: 6px;")
+        elif status == "Error":
+            self._lbl_driver_status.setText("Microsoft Serial Mouse: DISABLED (COM4 free for testing)")
+            self._lbl_driver_status.setStyleSheet(f"color: {Palette.PEACH}; font-size: 11px; background: {Palette.SURFACE0}; padding: 8px 12px; border-radius: 6px;")
+        else:
+            self._lbl_driver_status.setText(f"Driver status: {status}")
+
+    def _on_enable_tester_mode(self):
+        from ..core.mode_switcher import enable_tester_mode, is_admin
+        if not is_admin():
+            reply = QMessageBox.question(self, "Admin Required", "Requires UAC elevation. Continue?", QMessageBox.Yes | QMessageBox.No)
+            if reply != QMessageBox.Yes:
+                return
+        success, msg = enable_tester_mode()
+        if success:
+            self._statusbar.showMessage("Tester mode sent! Confirm UAC if prompted.", 5000)
+            QTimer.singleShot(3000, self._refresh_driver_status)
+        else:
+            QMessageBox.warning(self, "Error", f"Failed: {msg}")
+
+    def _on_restore_windows_mode(self):
+        from ..core.mode_switcher import restore_windows_mode, is_admin
+        if not is_admin():
+            reply = QMessageBox.question(self, "Admin Required", "Requires UAC elevation. Continue?", QMessageBox.Yes | QMessageBox.No)
+            if reply != QMessageBox.Yes:
+                return
+        success, msg = restore_windows_mode()
+        if success:
+            self._statusbar.showMessage("Windows mode sent! Confirm UAC if prompted.", 5000)
+            QTimer.singleShot(3000, self._refresh_driver_status)
+        else:
+            QMessageBox.warning(self, "Error", f"Failed: {msg}")
 
     def _open_settings(self):
         dialog = SerialSettingsDialog(self)
